@@ -1,4 +1,4 @@
-# ztd-capstone
+# zero-to-prod
 
 Production-grade DevOps capstone: polyglot e-commerce microservices with GitHub Actions CI/CD, SonarQube + Trivy gates, Terraform IaC, Kubernetes deployment to EKS, and a full observability stack (Prometheus, Grafana, Loki, Promtail, Tempo, OpenTelemetry).
 
