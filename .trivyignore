@@ -1,10 +1,8 @@
 # Trivy ignore policy — every entry here is a documented, deliberate risk
 # acceptance, NOT a blanket gate disable. The CI Trivy jobs
 # (pr-checks.yml fs scan + ci.yml per-image scan) still fail the build on any
-# HIGH/CRITICAL finding that is not explicitly listed below (in particular:
-# any FIXABLE finding that is not one of the two documented app-dependency
-# exceptions will break the build). Review this file whenever it is touched;
-# each entry must keep its justification current.
+# HIGH/CRITICAL finding that is not explicitly listed below. Review this file
+# whenever it is touched; each entry must keep its justification current.
 #
 # What has been FIXED rather than ignored (so it is NOT in this list):
 #   * services/catalog — every Go module CVE was resolved by bumping
@@ -13,7 +11,7 @@
 #   * services/frontend — nginx-unprivileged:alpine image scans clean.
 #   * fast-uri path-traversal (api-gateway) — pinned to 3.1.3 via an override.
 #   * All FIXABLE Debian OS CVEs in the api-gateway (node:20-slim) and orders
-#     (python:3.12-slim) images — cleared by `apt-get -y upgrade` in each
+#     (python:3.12-slim) images — cleared by apt-get -y upgrade in each
 #     Dockerfile's runtime stage.
 #   * The npm-CLI-bundled library CVEs (tar, minimatch, glob, cross-spawn,
 #     sigstore) in api-gateway — eliminated by removing the unused npm CLI
@@ -33,8 +31,8 @@ CVE-2026-44902
 # CVE-2026-25223 — fastify Content-Type validation bypass. Fixed only in
 # fastify v5 (major bump from the v4 this service is pinned to), which is a
 # breaking change to route/schema/hook APIs used throughout src/. Requires a
-# dedicated migration + regression pass, out of scope here. Tracked as
-# follow-up work.
+# dedicated migration + regression pass, out of scope for this CI-wiring
+# change. Tracked as follow-up work.
 CVE-2026-25223
 
 # --- Debian base-image OS packages with NO upstream fix (Status: affected,
@@ -43,12 +41,12 @@ CVE-2026-25223
 #
 # These are packages baked into the official Debian base images (perl-base,
 # util-linux family, ncurses, gzip, zlib1g, libacl1) that Debian has not yet
-# released a security update for — `apt-get upgrade` in the Dockerfiles
-# already pulls in everything that IS fixed, so there is nothing to bump to.
-# None are reachable from these services' runtime code paths (the containers
-# run only `node dist/index.js` / `python -m app.main` as non-root; no shell,
-# perl, tar, or util-linux invocation at runtime). Re-run the image scan on
-# each base-image bump and drop entries here once Debian ships a fix.
+# released a security update for — apt-get upgrade already pulls in everything
+# that IS fixed, so there is nothing to bump to. None are reachable from these
+# services' runtime code paths (containers run only node dist/index.js /
+# python -m app.main as non-root; no shell, perl, tar, or util-linux invocation
+# at runtime). Re-run the image scan on each base-image bump and drop entries
+# here once Debian ships a fix.
 # EXPIRY: re-evaluate on the next base-image bump; remove any that gain a fix.
 CVE-2026-53615
 CVE-2026-41992
@@ -79,3 +77,18 @@ AWS-0132
 # and SonarQube's own authentication), and restricting egress on a single,
 # non-multi-tenant host provides negligible additional security here.
 AWS-0104
+
+# AWS-0040 — EKS public endpoint is retained for this single-operator learning
+# environment so kubectl and Terraform's Kubernetes/Helm providers can run from
+# the operator workstation. Mitigations: private endpoint is also enabled;
+# the public CIDR variable is required and rejects 0.0.0.0/0 and ::/0; the
+# runbook requires a current operator IP /32. Accepted only for this lab.
+# For production, use private-only access from a VPC-connected operator/runner.
+AWS-0040
+
+# AWS-0164 — public-IP auto-assignment remains enabled on public subnets to
+# keep the learning environment NAT-free and avoid NAT Gateway hourly/data
+# charges. This gives nodes public IPv4 addresses and is not a production
+# private-node topology. For production, use private node subnets and suitable
+# NAT/VPC endpoints; review these costs before changing the architecture.
+AWS-0164
