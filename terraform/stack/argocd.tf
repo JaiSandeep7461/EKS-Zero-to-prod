@@ -1,8 +1,7 @@
 # Phase 8: ArgoCD (GitOps CD). Installs into the `argocd` namespace
 # (kubernetes_namespace.this["argocd"], namespaces.tf) on the dedicated
 # platform nodegroup only (deploy/argocd/argocd-values.yaml sets
-# global.nodeSelector = {workload: platform} for every component) — nothing
-# lands on the shared ng-dense nodegroup or touches any other namespace.
+# global.nodeSelector = {workload: platform} for every component).
 #
 # Repo is public, so no git credentials/repo Secret are configured — the
 # Application manifests (deploy/argocd/*) reference the repo over anonymous
