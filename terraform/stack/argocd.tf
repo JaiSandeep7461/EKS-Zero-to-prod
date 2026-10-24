@@ -38,7 +38,7 @@ resource "helm_release" "argocd" {
 resource "null_resource" "argocd_root_app" {
   triggers = {
     manifest_sha256 = filesha256("${path.module}/../../deploy/argocd/root-app.yaml")
-    root_app_path   = "${path.module}/../../deploy/argocd/root-app.yaml"
+    root_app_path   = "../../deploy/argocd/root-app.yaml"
     argocd_release  = helm_release.argocd.id
     cluster_name    = local.cluster_name
     region          = var.region
@@ -69,10 +69,6 @@ resource "null_resource" "argocd_root_app" {
       set -euo pipefail
       KCFG="$(mktemp)"
       trap 'rm -f "$KCFG"' EXIT
-      PROFILE_ARGS=()
-      if [ -n "${self.triggers.aws_profile}" ]; then
-        PROFILE_ARGS=(--profile "${self.triggers.aws_profile}")
-      fi
       aws eks update-kubeconfig \
         --name "${self.triggers.cluster_name}" \
         --region "${self.triggers.region}" \
