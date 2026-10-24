@@ -20,13 +20,10 @@ locals {
   github_oidc_thumbprint = "1c58a3a8518e8759bf075b76b750d4f2df264fcd"
 }
 
-# The GitHub Actions OIDC provider is ACCOUNT-WIDE — there can be exactly one
-# `token.actions.githubusercontent.com` provider per AWS account, and it is
-# shared by every repo in the account. So we treat it like other shared infra:
-# adopt the existing one via a data source by default, and only CREATE it on a
-# fresh account (set -var create_github_oidc_provider=true). This makes
-# `terraform apply` idempotent across destroy/recreate cycles instead of failing
-# with EntityAlreadyExists when the provider already exists.
+# The GitHub Actions OIDC provider is account-wide. For this account the
+# provider is absent, so create_github_oidc_provider defaults to true. Set it
+# to false only if a provider already exists and Terraform should look it up.
+# Do not switch this flag after creation without reconciling Terraform state.
 resource "aws_iam_openid_connect_provider" "github_actions" {
   count           = var.create_github_oidc_provider ? 1 : 0
   url             = "https://token.actions.githubusercontent.com"
@@ -151,7 +148,7 @@ data "aws_iam_policy_document" "ci_eks" {
     sid       = "EksDescribe"
     effect    = "Allow"
     actions   = ["eks:DescribeCluster"]
-    resources = ["arn:aws:eks:${var.region}:${var.account_id}:cluster/*"]
+    resources = ["arn:aws:eks:${var.region}:${var.account_id}:cluster/ztd-demo"]
   }
 }
 
