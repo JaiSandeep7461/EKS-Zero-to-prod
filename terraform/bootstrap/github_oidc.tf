@@ -3,15 +3,13 @@
 # survive a `terraform/stack` destroy/recreate cycle so CI keeps working
 # across full-stack rebuilds.
 #
-# Existing-infra protection: as of writing, `aws iam list-open-id-connect-providers`
-# shows only the two EKS cluster OIDC providers — no
-# `token.actions.githubusercontent.com` provider exists yet in this account,
-# so it is created here. If one is ever created out-of-band in the future,
-# switch this to a `data "aws_iam_openid_connect_provider"` lookup instead of
-# re-creating it.
+# This AWS account was checked before adapting the project. No GitHub Actions
+# OIDC provider exists, so bootstrap creates the account-wide provider. If a
+# provider is later created outside Terraform, set create_github_oidc_provider
+# to false and reconcile Terraform state/configuration before applying.
 
 locals {
-  github_org_repo = "Infrathrone-Devops-Park/ztd-capstone"
+  github_org_repo = "JaiSandeep7461/EKS-Zero-to-prod"
 
   # Thumbprint of the root CA (ISRG Root X1) that ultimately signs GitHub's
   # OIDC token-issuer TLS certificate (token.actions.githubusercontent.com),
@@ -153,7 +151,7 @@ data "aws_iam_policy_document" "ci_eks" {
     sid       = "EksDescribe"
     effect    = "Allow"
     actions   = ["eks:DescribeCluster"]
-    resources = ["arn:aws:eks:${var.region}:${var.account_id}:cluster/ztd-demo"]
+    resources = ["arn:aws:eks:${var.region}:${var.account_id}:cluster/*"]
   }
 }
 
