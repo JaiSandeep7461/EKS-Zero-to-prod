@@ -1,7 +1,6 @@
 # Dedicated managed nodegroup in the project-owned ztd-demo cluster.
-# The existing nodegroup (ng-dense) is referenced nowhere here — it is
-# entirely untouched by this file. EKS managed nodegroups register/deregister
-# nodes automatically; no aws-auth ConfigMap edits are made or needed.
+# EKS managed nodegroups register and deregister nodes automatically;
+# no aws-auth ConfigMap edits are needed for this node group.
 
 data "aws_iam_policy_document" "node_assume_role" {
   statement {
