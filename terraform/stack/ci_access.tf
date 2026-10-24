@@ -30,7 +30,7 @@ resource "aws_eks_access_entry" "ci" {
 # image tag (Deployments/Services/Secrets/etc. in `dev`), nothing
 # cluster-wide.
 resource "aws_eks_access_policy_association" "ci_dev_edit" {
-  cluster_name  = var.cluster_name
+  cluster_name  = local.cluster_name
   principal_arn = data.aws_iam_role.ci.arn
   policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSEditPolicy"
 
