@@ -22,12 +22,64 @@ resource "aws_iam_role_policy_attachment" "cluster_policy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
 }
 
+# Customer-managed key for Kubernetes Secrets. EKS 1.28+ encrypts Secrets
+# with envelope encryption by default; this key gives the account explicit
+# key ownership, rotation, auditing, and lifecycle control.
+resource "aws_kms_key" "eks_secrets" {
+  description              = "Kubernetes Secrets encryption for ${var.cluster_name}"
+  customer_master_key_spec = "SYMMETRIC_DEFAULT"
+  key_usage                = "ENCRYPT_DECRYPT"
+  enable_key_rotation      = true
+  deletion_window_in_days  = 7
+
+  tags = merge(local.common_tags, {
+    Name = "${var.project}-eks-secrets"
+  })
+}
+
+resource "aws_kms_alias" "eks_secrets" {
+  name          = "alias/${var.project}-eks-secrets"
+  target_key_id = aws_kms_key.eks_secrets.key_id
+}
+
+# Allow the EKS cluster role to use this key for secrets envelope encryption.
+# The default key policy retains account-root IAM delegation.
+resource "aws_iam_role_policy" "cluster_secrets_encryption" {
+  name = "${var.project}-eks-secrets-encryption"
+  role = aws_iam_role.cluster.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "kms:Encrypt",
+        "kms:Decrypt",
+        "kms:ReEncrypt*",
+        "kms:GenerateDataKey*",
+        "kms:DescribeKey",
+        "kms:CreateGrant",
+        "kms:ListGrants"
+      ]
+      Resource = aws_kms_key.eks_secrets.arn
+    }]
+  })
+}
+
 resource "aws_eks_cluster" "this" {
   name     = var.cluster_name
   role_arn = aws_iam_role.cluster.arn
   version  = var.cluster_version
 
   enabled_cluster_log_types = ["api", "audit", "authenticator"]
+
+  encryption_config {
+    resources = ["secrets"]
+
+    provider {
+      key_arn = aws_kms_key.eks_secrets.arn
+    }
+  }
 
   access_config {
     authentication_mode                         = "API_AND_CONFIG_MAP"
@@ -47,6 +99,7 @@ resource "aws_eks_cluster" "this" {
 
   depends_on = [
     aws_iam_role_policy_attachment.cluster_policy,
+    aws_iam_role_policy.cluster_secrets_encryption,
     aws_route_table_association.public,
   ]
 }

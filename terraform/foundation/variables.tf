@@ -46,9 +46,16 @@ variable "availability_zone_count" {
 }
 
 variable "cluster_endpoint_public_access_cidrs" {
-  description = "CIDRs allowed to reach the public EKS API endpoint. GitHub-hosted runners need broad access because their IPs are ephemeral; restrict this when you use a known runner/operator CIDR."
+  description = "Required trusted CIDRs for the public EKS API endpoint. Do not use 0.0.0.0/0 or ::/0."
   type        = list(string)
-  default     = ["0.0.0.0/0"]
+
+  validation {
+    condition = length(var.cluster_endpoint_public_access_cidrs) > 0 && alltrue([
+      for cidr in var.cluster_endpoint_public_access_cidrs :
+      cidr != "0.0.0.0/0" && cidr != "::/0"
+    ])
+    error_message = "Provide at least one trusted CIDR; global access CIDRs 0.0.0.0/0 and ::/0 are not allowed."
+  }
 }
 
 variable "system_node_instance_type" {
