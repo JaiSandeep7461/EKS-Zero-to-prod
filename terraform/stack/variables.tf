@@ -7,7 +7,7 @@ variable "region" {
 variable "aws_profile" {
   description = "AWS CLI profile to use"
   type        = string
-  default     = "infrathrone-new"
+  default     = "zero-to-prod"
 }
 
 variable "project" {
