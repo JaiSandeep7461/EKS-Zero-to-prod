@@ -70,7 +70,7 @@ resource "aws_iam_instance_profile" "sonar" {
 resource "aws_security_group" "sonar" {
   name        = "${var.project}-sonar-sg"
   description = "SonarQube EC2: inbound 9000 only, SSM for admin access (no SSH)"
-  vpc_id      = var.vpc_id
+  vpc_id      = local.vpc_id
 
   ingress {
     description = "SonarQube web UI/API"
@@ -99,7 +99,7 @@ resource "aws_security_group" "sonar" {
 resource "aws_instance" "sonar" {
   ami                    = data.aws_ssm_parameter.al2023.value
   instance_type          = var.sonar_instance_type
-  subnet_id              = element(var.public_subnet_ids, 0)
+  subnet_id              = element(local.public_subnet_ids, 0)
   vpc_security_group_ids = [aws_security_group.sonar.id]
   iam_instance_profile   = aws_iam_instance_profile.sonar.name
 
