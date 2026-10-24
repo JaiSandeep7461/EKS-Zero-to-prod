@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        dir: [bootstrap, foundation, stack]
+        dir: [bootstrap, stack]
     steps:
       - uses: actions/checkout@v4
 
@@ -44,7 +44,7 @@ jobs:
           tflint
 
   plan-stack:
-    if: github.event_name == 'pull_request' && vars.TERRAFORM_FOUNDATION_READY == 'true'
+    if: github.event_name == 'pull_request'
     needs: fmt-validate-lint
     runs-on: ubuntu-latest
     permissions:
@@ -78,6 +78,7 @@ jobs:
           terraform init -input=false
           terraform plan -input=false -no-color \
             -var "aws_profile=" \
+            -target=helm_release.app \
             -target=helm_release.app_staging \
             -target=helm_release.app_prod \
             | tee /tmp/plan.txt
@@ -88,7 +89,7 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const plan = fs.existsSync('/tmp/plan.txt') ? fs.readFileSync('/tmp/plan.txt', 'utf8').slice(-60000) : 'Terraform plan did not produce output. Check the previous step logs.';
+            const plan = fs.readFileSync('/tmp/plan.txt', 'utf8').slice(-60000);
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
