@@ -7,7 +7,7 @@ variable "region" {
 variable "aws_profile" {
   description = "AWS CLI profile to use"
   type        = string
-  default     = "infrathrone-new"
+  default     = "zero-to-prod"
 }
 
 variable "project" {
@@ -17,13 +17,13 @@ variable "project" {
 }
 
 variable "cluster_name" {
-  description = "Existing shared EKS cluster name (data source only, never modified)"
+  description = "EKS cluster name; the cluster must exist before stack resources are applied"
   type        = string
   default     = "ztd-demo"
 }
 
 variable "vpc_id" {
-  description = "Existing shared VPC id (data source only, never modified)"
+  description = "VPC id used by the EKS and SonarQube resources"
   type        = string
   default     = "vpc-062ffcaf33a87760f"
 }
@@ -31,21 +31,13 @@ variable "vpc_id" {
 variable "private_subnet_ids" {
   description = "Private subnet ids used for the new platform nodegroup"
   type        = list(string)
-  default = [
-    "subnet-092d8bf0bdba1ede3",
-    "subnet-017f49a267f59869b",
-    "subnet-09276e71db6d46cc7",
-  ]
+  default = []
 }
 
 variable "public_subnet_ids" {
   description = "Public subnet ids used for the SonarQube EC2 instance"
   type        = list(string)
-  default = [
-    "subnet-0c106bdac632ddf35",
-    "subnet-08fd75b717c891983",
-    "subnet-082e7f345a2574ecb",
-  ]
+  default = []
 }
 
 variable "node_instance_type" {
