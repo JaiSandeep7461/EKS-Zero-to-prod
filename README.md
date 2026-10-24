@@ -45,6 +45,7 @@ After bootstrap, add the Terraform output `ci_role_arn` as the repository Action
 
 - `AWS_REGION` = `ap-south-1`
 - `ECR_REGISTRY` = `921810470521.dkr.ecr.ap-south-1.amazonaws.com`
+- `TERRAFORM_FOUNDATION_READY` = `true` only after bootstrap and foundation have been applied successfully (enables the remote Terraform plan job on pull requests).
 
 No long-lived AWS access keys are needed by GitHub Actions; the workflow assumes the IAM role through OIDC.
 
