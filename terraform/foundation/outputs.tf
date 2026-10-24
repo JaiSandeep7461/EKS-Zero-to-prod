@@ -33,7 +33,7 @@ output "system_node_group_name" {
   value       = aws_eks_node_group.system.node_group_name
 }
 
-output "ebs_csi_addon_status" {
-  description = "Status of the EBS CSI driver add-on"
-  value       = aws_eks_addon.ebs_csi.status
+output "ebs_csi_addon_version" {
+  description = "Selected version of the EBS CSI driver add-on"
+  value       = aws_eks_addon.ebs_csi.addon_version
 }
