@@ -27,3 +27,4 @@ Terraform never manages the shared `ztd-demo` cluster, its default nodegroup, or
 <!-- ci demo trigger 2026-07-12T09:27:21Z -->
 
 <!-- ci demo -->
+# EKS-Zero-to-prod
