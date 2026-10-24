@@ -16,30 +16,6 @@ variable "project" {
   default     = "ztd-capstone"
 }
 
-variable "cluster_name" {
-  description = "EKS cluster name; the cluster must exist before stack resources are applied"
-  type        = string
-  default     = "ztd-demo"
-}
-
-variable "vpc_id" {
-  description = "VPC id used by the EKS and SonarQube resources"
-  type        = string
-  default     = "vpc-062ffcaf33a87760f"
-}
-
-variable "private_subnet_ids" {
-  description = "Private subnet ids used for the new platform nodegroup"
-  type        = list(string)
-  default = []
-}
-
-variable "public_subnet_ids" {
-  description = "Public subnet ids used for the SonarQube EC2 instance"
-  type        = list(string)
-  default = []
-}
-
 variable "node_instance_type" {
   description = "Instance type for the dedicated platform nodegroup"
   type        = string
