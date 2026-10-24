@@ -1,7 +1,8 @@
 # Phase 8: ArgoCD (GitOps CD). Installs into the `argocd` namespace
 # (kubernetes_namespace.this["argocd"], namespaces.tf) on the dedicated
 # platform nodegroup only (deploy/argocd/argocd-values.yaml sets
-# global.nodeSelector = {workload: platform} for every component).
+# global.nodeSelector = {workload: platform} for every component) — nothing
+# lands on the shared ng-dense nodegroup or touches any other namespace.
 #
 # Repo is public, so no git credentials/repo Secret are configured — the
 # Application manifests (deploy/argocd/*) reference the repo over anonymous
@@ -46,7 +47,7 @@ resource "null_resource" "argocd_root_app" {
       KCFG="$(mktemp)"
       trap 'rm -f "$KCFG"' EXIT
       aws eks update-kubeconfig \
-        --name "${local.cluster_name}" \
+        --name "${var.cluster_name}" \
         --region "${var.region}" \
         ${var.aws_profile != "" ? "--profile ${var.aws_profile}" : ""} \
         --kubeconfig "$KCFG" >/dev/null
