@@ -1,7 +1,6 @@
-# Dedicated managed nodegroup, additive to the shared ztd-demo cluster.
-# The existing nodegroup (ng-dense) is referenced nowhere here — it is
-# entirely untouched by this file. EKS managed nodegroups register/deregister
-# nodes automatically; no aws-auth ConfigMap edits are made or needed.
+# Dedicated managed nodegroup for platform workloads on the EKS cluster
+# created by terraform/foundation. The smaller system nodegroup remains in
+# the foundation state; this nodegroup is the stack's cost-toggle capacity.
 
 data "aws_iam_policy_document" "node_assume_role" {
   statement {
@@ -41,10 +40,10 @@ resource "aws_iam_role_policy_attachment" "node_ssm" {
 }
 
 resource "aws_eks_node_group" "platform" {
-  cluster_name    = var.cluster_name
+  cluster_name    = local.cluster_name
   node_group_name = "ztd-capstone-platform"
   node_role_arn   = aws_iam_role.node.arn
-  subnet_ids      = var.private_subnet_ids
+  subnet_ids      = local.public_subnet_ids
 
   ami_type       = "AL2023_x86_64_STANDARD"
   instance_types = [var.node_instance_type]

@@ -1,0 +1,17 @@
+# Fresh-account foundation defaults. Copy to terraform.tfvars only if overrides are needed.
+region                    = "ap-south-1"
+aws_profile               = "zero-to-prod"
+project                   = "ztd-capstone"
+cluster_name              = "ztd-demo"
+cluster_version           = "1.36"
+vpc_cidr                  = "10.20.0.0/16"
+availability_zone_count   = 3
+
+# 0.0.0.0/0 permits GitHub-hosted runners with ephemeral IPs to reach the
+# IAM-authenticated API endpoint. Restrict to your office/VPN CIDR when possible.
+cluster_endpoint_public_access_cidrs = ["0.0.0.0/0"]
+
+system_node_instance_type = "t3.small"
+system_node_desired_size  = 1
+system_node_min_size      = 1
+system_node_max_size      = 2
