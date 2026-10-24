@@ -3,7 +3,7 @@
 # `terraform apply` (helm/kubernetes providers) against the `dev` namespace
 # to roll a new app_image_tag. This is the ONLY access-entry change made
 # here — no pre-existing access entry (AWSServiceRoleForAmazonEKS,
-# other IAM principals or the platform node role)
+# ng-dense/ng-small node roles, the platform node role, or the Admin user)
 # is touched or modified.
 #
 # The CI role itself is data-sourced (it lives in the bootstrap layer, which
@@ -15,7 +15,7 @@ data "aws_iam_role" "ci" {
 }
 
 resource "aws_eks_access_entry" "ci" {
-  cluster_name  = local.cluster_name
+  cluster_name  = var.cluster_name
   principal_arn = data.aws_iam_role.ci.arn
   type          = "STANDARD"
 
@@ -30,7 +30,7 @@ resource "aws_eks_access_entry" "ci" {
 # image tag (Deployments/Services/Secrets/etc. in `dev`), nothing
 # cluster-wide.
 resource "aws_eks_access_policy_association" "ci_dev_edit" {
-  cluster_name  = local.cluster_name
+  cluster_name  = var.cluster_name
   principal_arn = data.aws_iam_role.ci.arn
   policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSEditPolicy"
 
