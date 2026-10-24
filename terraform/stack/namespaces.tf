@@ -1,4 +1,4 @@
-# App/observability namespaces on the project-owned EKS cluster. Purely additive;
+# App/observability namespaces on the shared cluster. Purely additive;
 # does not touch any pre-existing namespace (default, ingress-nginx,
 # kube-system, kube-public, kube-node-lease, local-path-storage).
 
