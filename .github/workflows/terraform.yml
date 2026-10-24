@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        dir: [bootstrap, stack]
+        dir: [bootstrap, foundation, stack]
     steps:
       - uses: actions/checkout@v4
 
@@ -78,7 +78,6 @@ jobs:
           terraform init -input=false
           terraform plan -input=false -no-color \
             -var "aws_profile=" \
-            -target=helm_release.app \
             -target=helm_release.app_staging \
             -target=helm_release.app_prod \
             | tee /tmp/plan.txt
