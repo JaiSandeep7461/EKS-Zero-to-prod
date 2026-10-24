@@ -11,7 +11,7 @@
 # re-creating it.
 
 locals {
-  github_org_repo = "Infrathrone-Devops-Park/ztd-capstone"
+  github_org_repo = "JaiSandeep7461/EKS-Zero-to-prod"
 
   # Thumbprint of the root CA (ISRG Root X1) that ultimately signs GitHub's
   # OIDC token-issuer TLS certificate (token.actions.githubusercontent.com),
