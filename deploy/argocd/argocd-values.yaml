@@ -4,7 +4,7 @@
 # applicationset and notifications unless a component overrides it — none
 # do here). Nothing lands on the ng-dense nodegroup or any other namespace.
 #
-# Repo is public (github.com/Infrathrone-Devops-Park/ztd-capstone) so no
+# Repo is public (github.com/JaiSandeep7461/EKS-Zero-to-prod) so no
 # git credentials/repo Secret are configured — Applications reference the
 # repo URL directly over anonymous HTTPS.
 
