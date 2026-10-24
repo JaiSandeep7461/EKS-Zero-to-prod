@@ -2,7 +2,7 @@
 # (kubernetes_namespace.this["argocd"], namespaces.tf) on the dedicated
 # platform nodegroup only (deploy/argocd/argocd-values.yaml sets
 # global.nodeSelector = {workload: platform} for every component) — nothing
-# lands on the shared ng-dense nodegroup or touches any other namespace.
+# lands on the shared foundation system node group nodegroup or touches any other namespace.
 #
 # Repo is public, so no git credentials/repo Secret are configured — the
 # Application manifests (deploy/argocd/*) reference the repo over anonymous
@@ -39,15 +39,19 @@ resource "null_resource" "argocd_root_app" {
   triggers = {
     manifest_sha256 = filesha256("${path.module}/../../deploy/argocd/root-app.yaml")
     argocd_release  = helm_release.argocd.id
+    cluster_name    = local.cluster_name
+    region          = var.region
+    aws_profile     = var.aws_profile
   }
 
   provisioner "local-exec" {
+    interpreter = ["bash", "-c"]
     command = <<-EOT
       set -euo pipefail
       KCFG="$(mktemp)"
       trap 'rm -f "$KCFG"' EXIT
       aws eks update-kubeconfig \
-        --name "${var.cluster_name}" \
+        --name "${local.cluster_name}" \
         --region "${var.region}" \
         ${var.aws_profile != "" ? "--profile ${var.aws_profile}" : ""} \
         --kubeconfig "$KCFG" >/dev/null
@@ -55,5 +59,32 @@ resource "null_resource" "argocd_root_app" {
     EOT
   }
 
-  depends_on = [helm_release.argocd]
+  # Delete the app-of-apps before the Argo CD release so its finalizer can
+  # prune child Applications and workloads during a full stack teardown.
+  provisioner "local-exec" {
+    when        = destroy
+    interpreter = ["bash", "-c"]
+    command = <<-EOT
+      set -euo pipefail
+      KCFG="$(mktemp)"
+      trap 'rm -f "$KCFG"' EXIT
+      PROFILE_ARGS=()
+      if [ -n "${self.triggers.aws_profile}" ]; then
+        PROFILE_ARGS=(--profile "${self.triggers.aws_profile}")
+      fi
+      aws eks update-kubeconfig \
+        --name "${self.triggers.cluster_name}" \
+        --region "${self.triggers.region}" \
+        "${PROFILE_ARGS[@]}" \
+        --kubeconfig "$KCFG" >/dev/null
+      kubectl --kubeconfig "$KCFG" delete -f "${path.module}/../../deploy/argocd/root-app.yaml" \
+        --ignore-not-found=true --timeout=10m
+    EOT
+  }
+
+  depends_on = [
+    helm_release.argocd,
+    helm_release.traefik,
+    kubernetes_storage_class_v1.gp3,
+  ]
 }
