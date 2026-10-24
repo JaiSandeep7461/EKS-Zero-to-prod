@@ -2,7 +2,7 @@
 # (kubernetes_namespace.this["argocd"], namespaces.tf) on the dedicated
 # platform nodegroup only (deploy/argocd/argocd-values.yaml sets
 # global.nodeSelector = {workload: platform} for every component) — nothing
-# lands on the shared foundation system node group nodegroup or touches any other namespace.
+# lands on the foundation system node group or touches any other namespace.
 #
 # Repo is public, so no git credentials/repo Secret are configured — the
 # Application manifests (deploy/argocd/*) reference the repo over anonymous
@@ -47,7 +47,7 @@ resource "null_resource" "argocd_root_app" {
 
   provisioner "local-exec" {
     interpreter = ["bash", "-c"]
-    command = <<-EOT
+    command     = <<-EOT
       set -euo pipefail
       KCFG="$(mktemp)"
       trap 'rm -f "$KCFG"' EXIT
@@ -65,7 +65,7 @@ resource "null_resource" "argocd_root_app" {
   provisioner "local-exec" {
     when        = destroy
     interpreter = ["bash", "-c"]
-    command = <<-EOT
+    command     = <<-EOT
       set -euo pipefail
       KCFG="$(mktemp)"
       trap 'rm -f "$KCFG"' EXIT
