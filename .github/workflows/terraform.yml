@@ -25,7 +25,7 @@ jobs:
 
       - name: terraform fmt -check
         working-directory: terraform/${{ matrix.dir }}
-        run: terraform fmt -check -recursive
+        run: terraform fmt -check -diff -recursive
 
       - name: terraform init (no backend, no AWS creds needed to validate)
         working-directory: terraform/${{ matrix.dir }}
