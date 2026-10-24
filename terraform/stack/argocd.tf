@@ -38,6 +38,7 @@ resource "helm_release" "argocd" {
 resource "null_resource" "argocd_root_app" {
   triggers = {
     manifest_sha256 = filesha256("${path.module}/../../deploy/argocd/root-app.yaml")
+    root_app_path   = "${path.module}/../../deploy/argocd/root-app.yaml"
     argocd_release  = helm_release.argocd.id
     cluster_name    = local.cluster_name
     region          = var.region
@@ -75,9 +76,9 @@ resource "null_resource" "argocd_root_app" {
       aws eks update-kubeconfig \
         --name "${self.triggers.cluster_name}" \
         --region "${self.triggers.region}" \
-        "${PROFILE_ARGS[@]}" \
+        ${self.triggers.aws_profile != "" ? "--profile ${self.triggers.aws_profile}" : ""} \
         --kubeconfig "$KCFG" >/dev/null
-      kubectl --kubeconfig "$KCFG" delete -f "${path.module}/../../deploy/argocd/root-app.yaml" \
+      kubectl --kubeconfig "$KCFG" delete -f "${self.triggers.root_app_path}" \
         --ignore-not-found=true --timeout=10m
     EOT
   }
