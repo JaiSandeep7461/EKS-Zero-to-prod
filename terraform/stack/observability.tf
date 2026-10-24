@@ -46,7 +46,10 @@ resource "helm_release" "kube_prometheus_stack" {
 
   values = [file("${path.module}/../../deploy/observability/kube-prometheus-stack.values.yaml")]
 
-  depends_on = [kubernetes_secret.grafana_admin]
+  depends_on = [
+    kubernetes_secret.grafana_admin,
+    kubernetes_storage_class_v1.gp3,
+  ]
 }
 
 # ---------------------------------------------------------------------------
@@ -62,6 +65,8 @@ resource "helm_release" "loki" {
   timeout    = 600
 
   values = [file("${path.module}/../../deploy/observability/loki.values.yaml")]
+
+  depends_on = [kubernetes_storage_class_v1.gp3]
 }
 
 resource "helm_release" "promtail" {
@@ -90,6 +95,8 @@ resource "helm_release" "tempo" {
   timeout    = 300
 
   values = [file("${path.module}/../../deploy/observability/tempo.values.yaml")]
+
+  depends_on = [kubernetes_storage_class_v1.gp3]
 }
 
 resource "helm_release" "otel_collector" {

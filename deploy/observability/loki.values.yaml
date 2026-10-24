@@ -42,7 +42,7 @@ singleBinary:
     workload: platform
   persistence:
     enabled: true
-    storageClass: gp2
+    storageClass: gp3
     size: 10Gi
   resources:
     requests:
@@ -61,7 +61,7 @@ backend:
   replicas: 0
 
 # Disable extras we don't need at this scale (also keeps them off
-# ng-dense - none of these have a nodeSelector by default).
+# foundation system node group - none of these have a nodeSelector by default).
 gateway:
   enabled: false
 chunksCache:
@@ -71,7 +71,7 @@ resultsCache:
 minio:
   enabled: false
 # lokiCanary defaults to a DaemonSet with no nodeSelector - disable it
-# so it never lands on the shared ng-dense nodes.
+# so it never lands on the foundation system node group.
 lokiCanary:
   enabled: false
 test:
