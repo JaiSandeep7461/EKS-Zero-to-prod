@@ -38,7 +38,7 @@ spec:
         {{- if eq $peer "ingress" }}
         - namespaceSelector:
             matchLabels:
-              kubernetes.io/metadata.name: ingress-nginx
+              kubernetes.io/metadata.name: traefik
         {{- else }}
         - podSelector:
             matchLabels:

@@ -1,3 +1,5 @@
+> **Fresh-account note (October 2026):** This document records the original shared-cluster design. The current implementation creates its own VPC and EKS cluster in `terraform/foundation/`, then deploys workloads in `terraform/stack/`. Use [the fresh-account runbook](../runbooks/fresh-account-deploy.md) as the authoritative deployment order and current account/network configuration.
+
 # ztd-capstone — Design Spec
 
 **Date:** 2026-07-09

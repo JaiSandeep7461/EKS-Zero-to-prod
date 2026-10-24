@@ -10,7 +10,7 @@ fullnameOverride: ""
 # Global image defaults. Per-service repo is set under services.<svc>.image.
 # -----------------------------------------------------------------------
 image:
-  registry: 514422154867.dkr.ecr.ap-south-1.amazonaws.com
+  registry: 921810470521.dkr.ecr.ap-south-1.amazonaws.com
   tag: dev
   pullPolicy: IfNotPresent
 
@@ -32,15 +32,15 @@ metrics:
     enabled: true
 
 # -----------------------------------------------------------------------
-# Frontend Ingress (ingress-nginx). Host is environment-specific and is
+# Frontend ingress (Traefik). Host is environment-specific and is
 # overridden in values-{dev,staging,prod}.yaml.
 # -----------------------------------------------------------------------
 ingress:
   enabled: true
-  className: nginx
+  className: traefik
   host: ztd-capstone.example.com
   annotations:
-    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    traefik.ingress.kubernetes.io/router.entrypoints: web
   tls:
     enabled: false
     secretName: ""
@@ -64,7 +64,7 @@ postgres:
   # Key inside the Secret holding the full DATABASE_URL connection string
   # (postgresql://user:pass@postgres:5432/db) consumed by the orders service.
   secretDatabaseUrlKey: database-url
-  storageClassName: gp2
+  storageClassName: gp3
   storage: 5Gi
   resources:
     requests:
@@ -285,7 +285,7 @@ services:
         value: http://api-gateway.$(POD_NAMESPACE).svc.cluster.local
     envFromSecret: []
     # Special peer name "ingress" is translated by templates/networkpolicy.yaml
-    # into a namespaceSelector on the existing ingress-nginx namespace.
+    # into a namespaceSelector on the existing Traefik ingress-controller namespace.
     allowFrom:
       - ingress
     allowEgressTo:
