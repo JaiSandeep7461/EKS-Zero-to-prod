@@ -16,6 +16,38 @@ variable "project" {
   default     = "ztd-capstone"
 }
 
+variable "cluster_name" {
+  description = "Existing shared EKS cluster name (data source only, never modified)"
+  type        = string
+  default     = "ztd-demo"
+}
+
+variable "vpc_id" {
+  description = "Existing shared VPC id (data source only, never modified)"
+  type        = string
+  default     = "vpc-062ffcaf33a87760f"
+}
+
+variable "private_subnet_ids" {
+  description = "Private subnet ids used for the new platform nodegroup"
+  type        = list(string)
+  default = [
+    "subnet-092d8bf0bdba1ede3",
+    "subnet-017f49a267f59869b",
+    "subnet-09276e71db6d46cc7",
+  ]
+}
+
+variable "public_subnet_ids" {
+  description = "Public subnet ids used for the SonarQube EC2 instance"
+  type        = list(string)
+  default = [
+    "subnet-0c106bdac632ddf35",
+    "subnet-08fd75b717c891983",
+    "subnet-082e7f345a2574ecb",
+  ]
+}
+
 variable "node_instance_type" {
   description = "Instance type for the dedicated platform nodegroup"
   type        = string
