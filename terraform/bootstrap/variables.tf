@@ -7,13 +7,13 @@ variable "region" {
 variable "aws_profile" {
   description = "AWS CLI profile"
   type        = string
-  default     = "infrathrone-new"
+  default     = "zero-to-prod"
 }
 
 variable "account_id" {
   description = "AWS account id (used to make S3 bucket name globally unique)"
   type        = string
-  default     = "514422154867"
+  default     = "921810470521"
 }
 
 variable "project" {
@@ -32,10 +32,9 @@ variable "create_github_oidc_provider" {
   description = <<-EOT
     Whether to CREATE the account-wide GitHub Actions OIDC provider
     (token.actions.githubusercontent.com). There can be only one per AWS
-    account. Default false = adopt the existing provider via a data source
-    (correct when it already exists, e.g. this account). Set true only on a
-    fresh account that has no such provider yet.
+    account. Set true when this account has no GitHub OIDC provider; set false
+    only when the provider already exists and should be looked up.
   EOT
   type        = bool
-  default     = false
+  default     = true
 }
