@@ -26,11 +26,11 @@ resource "aws_iam_role_policy_attachment" "cluster_policy" {
 # with envelope encryption by default; this key gives the account explicit
 # key ownership, rotation, auditing, and lifecycle control.
 resource "aws_kms_key" "eks_secrets" {
-  description             = "Kubernetes Secrets encryption for ${var.cluster_name}"
+  description              = "Kubernetes Secrets encryption for ${var.cluster_name}"
   customer_master_key_spec = "SYMMETRIC_DEFAULT"
-  key_usage               = "ENCRYPT_DECRYPT"
-  enable_key_rotation     = true
-  deletion_window_in_days = 7
+  key_usage                = "ENCRYPT_DECRYPT"
+  enable_key_rotation      = true
+  deletion_window_in_days  = 7
 
   tags = merge(local.common_tags, {
     Name = "${var.project}-eks-secrets"
