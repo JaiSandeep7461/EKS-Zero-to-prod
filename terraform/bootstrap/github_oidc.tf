@@ -134,12 +134,12 @@ data "aws_iam_policy_document" "ci_tfstate" {
   statement {
     sid       = "TfLockTable"
     effect    = "Allow"
-    actions   = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:DeleteItem"]
+    actions   = ["dynamodb:DescribeTable", "dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:DeleteItem"]
     resources = [aws_dynamodb_table.tflock.arn]
   }
 }
 
-# EKS: describe the shared cluster (needed by the kubernetes/helm providers'
+# EKS: describe the project-owned cluster (needed by the kubernetes/helm providers'
 # data sources when CI runs `terraform apply` in terraform/stack). The
 # corresponding data-plane access (aws-auth / access entry) is granted
 # additively in terraform/stack/ci_access.tf — never here.
