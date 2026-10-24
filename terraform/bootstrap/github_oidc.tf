@@ -3,10 +3,12 @@
 # survive a `terraform/stack` destroy/recreate cycle so CI keeps working
 # across full-stack rebuilds.
 #
-# This AWS account was checked before adapting the project. No GitHub Actions
-# OIDC provider exists, so bootstrap creates the account-wide provider. If a
-# provider is later created outside Terraform, set create_github_oidc_provider
-# to false and reconcile Terraform state/configuration before applying.
+# Existing-infra protection: as of writing, `aws iam list-open-id-connect-providers`
+# shows only the two EKS cluster OIDC providers — no
+# `token.actions.githubusercontent.com` provider exists yet in this account,
+# so it is created here. If one is ever created out-of-band in the future,
+# switch this to a `data "aws_iam_openid_connect_provider"` lookup instead of
+# re-creating it.
 
 locals {
   github_org_repo = "JaiSandeep7461/EKS-Zero-to-prod"
@@ -20,10 +22,13 @@ locals {
   github_oidc_thumbprint = "1c58a3a8518e8759bf075b76b750d4f2df264fcd"
 }
 
-# The GitHub Actions OIDC provider is account-wide. For this account the
-# provider is absent, so create_github_oidc_provider defaults to true. Set it
-# to false only if a provider already exists and Terraform should look it up.
-# Do not switch this flag after creation without reconciling Terraform state.
+# The GitHub Actions OIDC provider is ACCOUNT-WIDE — there can be exactly one
+# `token.actions.githubusercontent.com` provider per AWS account, and it is
+# shared by every repo in the account. So we treat it like other shared infra:
+# adopt the existing one via a data source by default, and only CREATE it on a
+# fresh account (set -var create_github_oidc_provider=true). This makes
+# `terraform apply` idempotent across destroy/recreate cycles instead of failing
+# with EntityAlreadyExists when the provider already exists.
 resource "aws_iam_openid_connect_provider" "github_actions" {
   count           = var.create_github_oidc_provider ? 1 : 0
   url             = "https://token.actions.githubusercontent.com"
@@ -134,12 +139,12 @@ data "aws_iam_policy_document" "ci_tfstate" {
   statement {
     sid       = "TfLockTable"
     effect    = "Allow"
-    actions   = ["dynamodb:DescribeTable", "dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:DeleteItem"]
+    actions   = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:DeleteItem"]
     resources = [aws_dynamodb_table.tflock.arn]
   }
 }
 
-# EKS: describe the project-owned cluster (needed by the kubernetes/helm providers'
+# EKS: describe the shared cluster (needed by the kubernetes/helm providers'
 # data sources when CI runs `terraform apply` in terraform/stack). The
 # corresponding data-plane access (aws-auth / access entry) is granted
 # additively in terraform/stack/ci_access.tf — never here.
