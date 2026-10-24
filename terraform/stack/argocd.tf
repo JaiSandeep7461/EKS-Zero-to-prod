@@ -47,7 +47,7 @@ resource "null_resource" "argocd_root_app" {
       KCFG="$(mktemp)"
       trap 'rm -f "$KCFG"' EXIT
       aws eks update-kubeconfig \
-        --name "${var.cluster_name}" \
+        --name "${local.cluster_name}" \
         --region "${var.region}" \
         ${var.aws_profile != "" ? "--profile ${var.aws_profile}" : ""} \
         --kubeconfig "$KCFG" >/dev/null
