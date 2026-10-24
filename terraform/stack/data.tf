@@ -1,17 +1,35 @@
-# All existing shared infra (cluster, VPC, subnets, OIDC, existing nodegroup)
-# is referenced via data sources ONLY. Never import/modify/destroy these.
+# The foundation root owns the VPC and EKS control plane. This stack reads
+# its outputs and creates only additive workloads, a dedicated nodegroup, and
+# its supporting resources. Apply terraform/foundation before this directory.
+
+data "terraform_remote_state" "foundation" {
+  backend = "s3"
+
+  config = merge(
+    {
+      bucket = "ztd-capstone-tfstate-921810470521"
+      key    = "foundation/terraform.tfstate"
+      region = var.region
+    },
+    var.aws_profile != "" ? { profile = var.aws_profile } : {}
+  )
+}
+
+locals {
+  cluster_name      = data.terraform_remote_state.foundation.outputs.cluster_name
+  vpc_id            = data.terraform_remote_state.foundation.outputs.vpc_id
+  public_subnet_ids = data.terraform_remote_state.foundation.outputs.public_subnet_ids
+}
 
 data "aws_eks_cluster" "this" {
-  name = var.cluster_name
+  name = local.cluster_name
 }
 
 data "aws_eks_cluster_auth" "this" {
-  name = var.cluster_name
+  name = local.cluster_name
 }
 
-# Plain Amazon Linux 2023 AMI for the self-managed SonarQube EC2 instance.
-# (The EKS nodegroup uses ami_type = AL2023_x86_64_STANDARD directly and does
-# not need a raw AMI id, so no EKS-optimized AMI data source is required.)
+# Amazon Linux 2023 AMI for the self-hosted SonarQube EC2 instance.
 data "aws_ssm_parameter" "al2023" {
   name = "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64"
 }

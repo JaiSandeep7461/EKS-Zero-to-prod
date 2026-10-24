@@ -5,7 +5,7 @@ variable "region" {
 }
 
 variable "aws_profile" {
-  description = "AWS CLI profile to use"
+  description = "AWS CLI profile to use; set to empty for environment/OIDC credentials"
   type        = string
   default     = "zero-to-prod"
 }
@@ -14,38 +14,6 @@ variable "project" {
   description = "Project tag/name prefix"
   type        = string
   default     = "ztd-capstone"
-}
-
-variable "cluster_name" {
-  description = "Existing shared EKS cluster name (data source only, never modified)"
-  type        = string
-  default     = "ztd-demo"
-}
-
-variable "vpc_id" {
-  description = "Existing shared VPC id (data source only, never modified)"
-  type        = string
-  default     = "vpc-062ffcaf33a87760f"
-}
-
-variable "private_subnet_ids" {
-  description = "Private subnet ids used for the new platform nodegroup"
-  type        = list(string)
-  default = [
-    "subnet-092d8bf0bdba1ede3",
-    "subnet-017f49a267f59869b",
-    "subnet-09276e71db6d46cc7",
-  ]
-}
-
-variable "public_subnet_ids" {
-  description = "Public subnet ids used for the SonarQube EC2 instance"
-  type        = list(string)
-  default = [
-    "subnet-0c106bdac632ddf35",
-    "subnet-08fd75b717c891983",
-    "subnet-082e7f345a2574ecb",
-  ]
 }
 
 variable "node_instance_type" {
@@ -92,14 +60,10 @@ variable "sonar_disk_gib" {
 
 variable "sonar_ingress_cidr" {
   description = <<-EOT
-    CIDR allowed to reach SonarQube on :9000. Defaults to 0.0.0.0/0 so that
-    GitHub-hosted Actions runners (which use ephemeral, unpredictable public
-    IPs) can reach the Sonar server for CI scans. This intentionally exposes
-    the SonarQube web UI/API to the public internet on port 9000 — access
-    control relies on SonarQube's own authentication and CI token, not
-    network restriction. Narrow this to specific CIDRs (e.g. your office IP)
-    if public exposure is not acceptable for your environment.
-    EOT
+    CIDR allowed to reach SonarQube on :9000. The default exposes the web UI/API
+    publicly so GitHub-hosted runners with ephemeral IPs can run scans. Narrow
+    this to a trusted CIDR where possible; SonarQube authentication is still required.
+  EOT
   type        = string
   default     = "0.0.0.0/0"
 }
@@ -110,13 +74,6 @@ variable "sonar_db_password" {
   default     = ""
   sensitive   = true
 }
-
-# ---------------------------------------------------------------------------
-# release.yml (Phase 7 Task 4) promotion targets. Both default OFF (count=0)
-# so a plain `terraform apply` here is a strict no-op for these resources —
-# release.yml explicitly sets `-var deploy_staging=true` /
-# `-var deploy_prod=true` with the promoted tag when it runs.
-# ---------------------------------------------------------------------------
 
 variable "deploy_staging" {
   description = "Toggle for deploying the ztd-capstone app helm_release into staging (release.yml)."

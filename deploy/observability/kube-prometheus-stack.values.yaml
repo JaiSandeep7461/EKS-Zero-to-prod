@@ -2,7 +2,7 @@
 #
 # Everything here is pinned to the dedicated "platform" nodegroup
 # (workload=platform, 2x t3.large) so nothing lands on the shared
-# ng-dense nodes. Retention/resources are kept small to fit two
+# foundation system node group nodes. Retention/resources are kept small to fit two
 # t3.large nodes alongside the app (Phase 6).
 #
 # Chart: prometheus-community/kube-prometheus-stack (pinned in
@@ -57,7 +57,7 @@ prometheus:
     storageSpec:
       volumeClaimTemplate:
         spec:
-          storageClassName: gp2
+          storageClassName: gp3
           accessModes: ["ReadWriteOnce"]
           resources:
             requests:
@@ -65,7 +65,7 @@ prometheus:
 
 # node-exporter is deployed by the "prometheus-node-exporter" subchart, not
 # the "nodeExporter" key (that only toggles enable/disable + OS support).
-# Pinning nodeSelector here is what keeps the DaemonSet off ng-dense.
+# Pinning nodeSelector here is what keeps the DaemonSet off foundation system node group.
 prometheus-node-exporter:
   nodeSelector:
     workload: platform
@@ -109,7 +109,7 @@ grafana:
   persistence:
     enabled: true
     type: pvc
-    storageClassName: gp2
+    storageClassName: gp3
     accessModes: ["ReadWriteOnce"]
     size: 5Gi
 

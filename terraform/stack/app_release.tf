@@ -48,7 +48,6 @@ resource "helm_release" "app_staging" {
 
   depends_on = [
     kubernetes_secret.postgres_staging,
-    helm_release.kube_prometheus_stack,
   ]
 }
 
@@ -94,6 +93,5 @@ resource "helm_release" "app_prod" {
 
   depends_on = [
     kubernetes_secret.postgres_prod,
-    helm_release.kube_prometheus_stack,
   ]
 }

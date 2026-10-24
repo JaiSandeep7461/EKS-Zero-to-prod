@@ -1,9 +1,8 @@
-# App/observability namespaces on the shared cluster. Purely additive;
-# does not touch any pre-existing namespace (default, ingress-nginx,
-# kube-system, kube-public, kube-node-lease, local-path-storage).
+# Dedicated application, observability, GitOps, and ingress namespaces.
+# The foundation root owns the cluster; this stack adds namespaces only.
 
 locals {
-  namespace_names = toset(["dev", "staging", "prod", "observability", "argocd"])
+  namespace_names = toset(["dev", "staging", "prod", "observability", "argocd", "traefik"])
 }
 
 resource "kubernetes_namespace" "this" {
