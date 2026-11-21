@@ -23,6 +23,10 @@ COPY --from=build /app/package.json ./package.json
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 
+# The runtime only executes Node; npm/npx are not required and pull in a large
+# vulnerable CLI dependency tree. Remove them from the final image.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
+
 USER node
 
 EXPOSE 8080
