@@ -218,14 +218,18 @@ jobs:
             echo "No image.tag change to commit (tag already at ${{ steps.tag.outputs.tag }})"
             exit 0
           fi
-          git commit -m "chore(dev): bump image.tag to ${{ steps.tag.outputs.tag }} [skip ci]"
-
           # main may receive another commit while the image jobs are running.
-          # Reconcile with the latest remote state before pushing so a concurrent
-          # GitOps update does not make this otherwise-successful CI run fail.
+          # Reconcile with the latest remote state before creating the GitOps
+          # commit. This makes the push fast-forwardable even when another
+          # workflow has updated main during the image jobs.
           git fetch origin main
-          git checkout origin/main -- deploy/helm/ztd-capstone/values-dev.yaml
+          git reset --hard origin/main
           sed -i '0,/^  tag:/{s/^  tag:.*/  tag: ${{ steps.tag.outputs.tag }}/}' deploy/helm/ztd-capstone/values-dev.yaml
+          grep -n "tag:" deploy/helm/ztd-capstone/values-dev.yaml | head -1
           git add deploy/helm/ztd-capstone/values-dev.yaml
-          git commit --amend --no-edit
+          if git diff --cached --quiet; then
+            echo "No image.tag change to commit (tag already at ${{ steps.tag.outputs.tag }})"
+            exit 0
+          fi
+          git commit -m "chore(dev): bump image.tag to ${{ steps.tag.outputs.tag }} [skip ci]"
           git push origin HEAD:main
