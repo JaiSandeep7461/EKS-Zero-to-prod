@@ -71,10 +71,24 @@ data "aws_iam_policy_document" "ci_assume_role" {
       values   = ["sts.amazonaws.com"]
     }
 
+    # GitHub now uses immutable OIDC subject claims for repositories
+    # created after 2026-07-15. This repository's subject includes the
+    # owner/repository IDs, so the legacy repo:owner/repo:* pattern no longer
+    # matches the token presented by GitHub Actions.
+    #
+    # Keep the trust scoped to the workflows that actually need AWS:
+    # - main pushes for CI
+    # - v* tags for release promotion
+    # - staging/production environments used by release.yml
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${local.github_org_repo}:*"]
+      values = [
+        "repo:JaiSandeep7461@104224874/EKS-Zero-to-prod@1432019555:ref:refs/heads/main",
+        "repo:JaiSandeep7461@104224874/EKS-Zero-to-prod@1432019555:ref:refs/tags/v*",
+        "repo:JaiSandeep7461@104224874/EKS-Zero-to-prod@1432019555:environment:staging",
+        "repo:JaiSandeep7461@104224874/EKS-Zero-to-prod@1432019555:environment:production",
+      ]
     }
   }
 }
