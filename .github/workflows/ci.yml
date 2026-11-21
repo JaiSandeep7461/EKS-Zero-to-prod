@@ -219,4 +219,13 @@ jobs:
             exit 0
           fi
           git commit -m "chore(dev): bump image.tag to ${{ steps.tag.outputs.tag }} [skip ci]"
+
+          # main may receive another commit while the image jobs are running.
+          # Reconcile with the latest remote state before pushing so a concurrent
+          # GitOps update does not make this otherwise-successful CI run fail.
+          git fetch origin main
+          git checkout origin/main -- deploy/helm/ztd-capstone/values-dev.yaml
+          sed -i '0,/^  tag:/{s/^  tag:.*/  tag: ${{ steps.tag.outputs.tag }}/}' deploy/helm/ztd-capstone/values-dev.yaml
+          git add deploy/helm/ztd-capstone/values-dev.yaml
+          git commit --amend --no-edit
           git push origin HEAD:main
