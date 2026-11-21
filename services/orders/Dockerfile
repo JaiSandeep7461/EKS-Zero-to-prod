@@ -6,13 +6,12 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 COPY pyproject.toml ./
 COPY app ./app
-# Pin setuptools in the build environment itself. The PEP 517 isolated build
-# environment otherwise bootstraps its own copy and can leave the base-image
-# setuptools (70.3.0) in the image scanned by Trivy.
+# Use a current setuptools release whose vendored packaging dependencies are
+# patched. Trivy scans vendored METADATA as well as top-level packages.
 RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir --upgrade "setuptools==78.1.1" \
+    && pip install --no-cache-dir --upgrade "setuptools==84.2.1" \
     && pip install --no-cache-dir --no-build-isolation . \
-    && python -c "import setuptools; assert setuptools.__version__ == '78.1.1', setuptools.__version__"
+    && python -c "import setuptools; assert setuptools.__version__ == '84.2.1', setuptools.__version__"
 
 FROM --platform=linux/amd64 python:3.12-slim AS runtime
 # Pull in all available Debian security updates so the runtime image does not
@@ -25,15 +24,14 @@ RUN apt-get update \
     && apt-get -y --purge autoremove \
     && rm -rf /var/lib/apt/lists/*
 # Trivy scans the entire final image, including globally installed Python
-# packaging tools in /usr/local/lib/python3.12/site-packages (not just the
-# application's /opt/venv). Upgrade these in the runtime stage as well as the
-# builder stage so vulnerable base-image copies cannot remain in the image.
+# packaging tools. Install the same patched setuptools release in the runtime
+# stage so vulnerable base-image packaging metadata cannot remain.
 RUN python -m pip install --no-cache-dir --upgrade \
       "pip" \
-      "setuptools==78.1.1" \
+      "setuptools==84.2.1" \
       "jaraco.context>=6.1.0" \
       "wheel>=0.46.2" \
-    && python -c "from importlib.metadata import version; assert version('setuptools') == '78.1.1', version('setuptools'); assert tuple(map(int, version('jaraco.context').split('.'))) >= (6, 1, 0), version('jaraco.context'); assert tuple(map(int, version('wheel').split('.'))) >= (0, 46, 2), version('wheel')"
+    && python -c "from importlib.metadata import version; assert version('setuptools') == '84.2.1', version('setuptools'); assert tuple(map(int, version('jaraco.context').split('.'))) >= (6, 1, 0), version('jaraco.context'); assert tuple(map(int, version('wheel').split('.'))) >= (0, 46, 2), version('wheel')"
 RUN groupadd --system app && useradd --system --gid app --no-create-home app
 WORKDIR /app
 ENV PATH="/opt/venv/bin:$PATH" \
