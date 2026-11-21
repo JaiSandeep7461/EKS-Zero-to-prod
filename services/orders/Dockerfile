@@ -28,7 +28,7 @@ RUN apt-get update \
 # Trivy scans the entire final image, including globally installed Python
 # packaging tools. Remove the Debian setuptools package first so the patched
 # pip-managed installation is the only setuptools visible to the scanner.
-RUN find /usr/lib/python3/dist-packages /usr/local/lib/python3.12/site-packages -maxdepth 1 -name 'setuptools*' -exec rm -rf {} + \
+RUN python -m pip uninstall -y setuptools \
     && python -m pip install --no-cache-dir --upgrade \
       "pip" \
       "setuptools==84.2.1" \
