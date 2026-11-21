@@ -1,6 +1,6 @@
 # Dev overrides — single replica, minimal resources, HPA/PDB off.
 image:
-  tag: sha-af98fbd
+  tag: sha-17c1ee0
 
 ingress:
   host: dev.ztd-capstone.example.com
