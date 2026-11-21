@@ -133,6 +133,13 @@ jobs:
       # false-fails on MEDIUM/LOW; table mode passes `--severity HIGH,CRITICAL
       # --exit-code 1 --ignorefile` straight to trivy and fails only on a
       # non-ignored HIGH/CRITICAL. This is the real, active security gate.
+      - name: Refresh dependency metadata for security scan
+        run: |
+          cd services/api-gateway
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          cd ../catalog
+          go mod tidy
+
       - name: Trivy fs + config scan (blocking on HIGH/CRITICAL)
         uses: aquasecurity/trivy-action@v0.36.0
         with:
