@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # Build dependencies and setuptools are intentionally confined to this stage.
-FROM --platform=linux/amd64 python:3.12-slim AS build
+FROM --platform=linux/amd64 python:3.12-alpine AS build
 WORKDIR /src
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
@@ -15,11 +15,8 @@ RUN pip install --no-cache-dir --upgrade pip \
 # Start runtime from a fresh base image. Copy only the app environment, then
 # remove build-only packaging tools from the copied venv. The app itself does
 # not need setuptools, pip, or wheel at runtime.
-FROM --platform=linux/amd64 python:3.12-slim AS runtime
-RUN apt-get update \
-    && apt-get -y upgrade \
-    && rm -rf /var/lib/apt/lists/*
-RUN groupadd --system app && useradd --system --gid app --no-create-home app
+FROM --platform=linux/amd64 python:3.12-alpine AS runtime
+RUN addgroup -S app && adduser -S -G app app
 WORKDIR /app
 ENV PATH="/opt/venv/bin:$PATH" \
     PYTHONUNBUFFERED=1

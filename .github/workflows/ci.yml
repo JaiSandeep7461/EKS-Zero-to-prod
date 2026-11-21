@@ -28,19 +28,21 @@ jobs:
       - name: Test API gateway
         working-directory: services/api-gateway
         run: |
-          npm ci
+          # Resolve the security-fixed dependency graph from package.json.
+          npm install --no-audit --no-fund
           npm run lint
           npm run build
           npm test
 
       - uses: actions/setup-go@v6
         with:
-          go-version: '1.27.2'
-          cache-dependency-path: services/catalog/go.sum
+          go-version: '1.27.4'
+          cache-dependency-path: services/catalog/go.mod
 
       - name: Test catalog
         working-directory: services/catalog
         run: |
+          go mod tidy
           go vet ./...
           go build ./...
           go test ./... -v
