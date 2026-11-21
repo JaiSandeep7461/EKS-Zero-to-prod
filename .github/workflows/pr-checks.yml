@@ -16,7 +16,7 @@ jobs:
       orders: ${{ steps.filter.outputs.orders }}
       catalog: ${{ steps.filter.outputs.catalog }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - id: filter
         uses: dorny/paths-filter@v3
         with:
@@ -38,10 +38,10 @@ jobs:
       run:
         working-directory: services/frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '24'
           cache: npm
           cache-dependency-path: services/frontend/package-lock.json
       - run: npm ci
@@ -56,10 +56,10 @@ jobs:
       run:
         working-directory: services/api-gateway
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '24'
           cache: npm
           cache-dependency-path: services/api-gateway/package-lock.json
       - run: npm ci
@@ -75,10 +75,10 @@ jobs:
       run:
         working-directory: services/catalog
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
         with:
-          go-version: '1.25'
+          go-version: '1.27.2'
           cache-dependency-path: services/catalog/go.sum
       - run: go vet ./...
       - run: go build ./...
@@ -92,8 +92,8 @@ jobs:
       run:
         working-directory: services/orders
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - run: |
@@ -102,10 +102,13 @@ jobs:
       - run: ruff check .
       - run: pytest -q
 
+  # SonarQube is optional for this lab. Set repository variable ENABLE_SONAR=true
+  # and configure SONAR_TOKEN + SONAR_HOST_URL secrets to activate this quality gate.
   sonar:
+    if: vars.ENABLE_SONAR == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - name: SonarQube quality-gate scan
@@ -123,7 +126,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       # GATE: table format (not sarif). The trivy-action's sarif mode emits an
       # all-severity report and gates on it regardless of `severity`, so it
       # false-fails on MEDIUM/LOW; table mode passes `--severity HIGH,CRITICAL
