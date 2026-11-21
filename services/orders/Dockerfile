@@ -25,16 +25,18 @@ RUN apt-get update \
     && apt-get -y --purge autoremove \
     && apt-get purge -y python3-setuptools \
     && rm -rf /var/lib/apt/lists/*
-# Trivy scans the entire final image, including globally installed Python
-# packaging tools. Remove the Debian setuptools package first so the patched
-# pip-managed installation is the only setuptools visible to the scanner.
-RUN python -m pip uninstall -y setuptools \
-    && python -m pip install --no-cache-dir --upgrade \
-      "pip" \
-      "setuptools==84.2.1" \
-      "jaraco.context>=6.1.0" \
-      "wheel>=0.46.2" \
-    && python -c "from importlib.metadata import version; assert version('setuptools') == '84.2.1', version('setuptools'); assert tuple(map(int, version('jaraco.context').split('.'))) >= (6, 1, 0), version('jaraco.context'); assert tuple(map(int, version('wheel').split('.'))) >= (0, 46, 2), version('wheel')"
+# The application runs from /opt/venv. Do not install a second global
+# setuptools copy in the runtime image: Trivy scans every Python installation,
+# and the base image can contain a stale setuptools distribution outside pip's
+# active environment. Remove global setuptools artifacts defensively; the
+# patched setuptools 84.2.1 in /opt/venv is copied below.
+RUN rm -rf \
+      /usr/local/lib/python3.12/site-packages/setuptools* \
+      /usr/local/lib/python3.12/site-packages/pkg_resources* \
+      /usr/lib/python3/dist-packages/setuptools* \
+      /usr/lib/python3/dist-packages/pkg_resources* \
+    && python -m pip install --no-cache-dir --upgrade pip \
+    && python -c "import importlib.util; assert importlib.util.find_spec('setuptools') is None"
 RUN groupadd --system app && useradd --system --gid app --no-create-home app
 WORKDIR /app
 ENV PATH="/opt/venv/bin:$PATH" \
