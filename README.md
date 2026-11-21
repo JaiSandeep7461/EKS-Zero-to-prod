@@ -31,3 +31,7 @@ Do not apply `terraform/stack` before the foundation layer exists. Stack Terrafo
 ## Validation
 
 The Terraform workflow runs `fmt`, `validate`, and TFLint for the bootstrap, foundation, and stack roots. AWS infrastructure plans and applies should be reviewed and run by an operator with the intended AWS profile.
+
+## Deployment validation
+
+- [Dev deployment validation runbook](docs/runbooks/dev-deployment-validation.md) — CI → ECR → GitOps → Argo CD → EKS smoke-test flow.
