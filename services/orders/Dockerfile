@@ -22,10 +22,11 @@ FROM --platform=linux/amd64 python:3.12-slim AS runtime
 RUN apt-get update \
     && apt-get -y upgrade \
     && apt-get -y --purge autoremove \
+    && apt-get purge -y python3-setuptools \
     && rm -rf /var/lib/apt/lists/*
 # Trivy scans the entire final image, including globally installed Python
-# packaging tools. Install the same patched setuptools release in the runtime
-# stage so vulnerable base-image packaging metadata cannot remain.
+# packaging tools. Remove the Debian setuptools package first so the patched
+# pip-managed installation is the only setuptools visible to the scanner.
 RUN python -m pip install --no-cache-dir --upgrade \
       "pip" \
       "setuptools==84.2.1" \
