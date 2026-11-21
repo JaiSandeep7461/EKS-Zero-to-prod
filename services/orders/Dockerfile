@@ -6,8 +6,13 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 COPY pyproject.toml ./
 COPY app ./app
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir .
+# Pin setuptools in the build environment itself. The PEP 517 isolated build
+# environment otherwise bootstraps its own copy and can leave the base-image
+# setuptools (70.3.0) in the image scanned by Trivy.
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir --upgrade "setuptools==78.1.1" \
+    && pip install --no-cache-dir --no-build-isolation . \
+    && python -c "import setuptools; assert setuptools.__version__ == '78.1.1', setuptools.__version__"
 
 FROM --platform=linux/amd64 python:3.12-slim AS runtime
 # Pull in all available Debian security updates so the runtime image does not
