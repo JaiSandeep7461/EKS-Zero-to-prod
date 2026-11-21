@@ -8,7 +8,8 @@ COPY pyproject.toml ./
 COPY app ./app
 # Use a current setuptools release whose vendored packaging dependencies are
 # patched. Trivy scans vendored METADATA as well as top-level packages.
-RUN pip install --no-cache-dir --upgrade pip \
+RUN find /opt/venv/lib/python3.12/site-packages -maxdepth 1 -name 'setuptools*' -exec rm -rf {} + \
+    && pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir --upgrade "setuptools==84.2.1" \
     && pip install --no-cache-dir --no-build-isolation . \
     && python -c "import setuptools; assert setuptools.__version__ == '84.2.1', setuptools.__version__"
@@ -27,7 +28,8 @@ RUN apt-get update \
 # Trivy scans the entire final image, including globally installed Python
 # packaging tools. Remove the Debian setuptools package first so the patched
 # pip-managed installation is the only setuptools visible to the scanner.
-RUN python -m pip install --no-cache-dir --upgrade \
+RUN find /usr/lib/python3/dist-packages /usr/local/lib/python3.12/site-packages -maxdepth 1 -name 'setuptools*' -exec rm -rf {} + \
+    && python -m pip install --no-cache-dir --upgrade \
       "pip" \
       "setuptools==84.2.1" \
       "jaraco.context>=6.1.0" \
