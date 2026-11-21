@@ -24,11 +24,16 @@ RUN apt-get update \
     && apt-get -y upgrade \
     && apt-get -y --purge autoremove \
     && rm -rf /var/lib/apt/lists/*
-# The base image ships a system pip in /usr/local/lib/python3.12/site-packages
-# (the app runs from /opt/venv and never invokes it at runtime, but Trivy
-# still scans it). Upgrade it to clear fixable pip CVEs so the image gate has
-# nothing fixable to flag.
-RUN python -m pip install --no-cache-dir --upgrade pip
+# Trivy scans the entire final image, including globally installed Python
+# packaging tools in /usr/local/lib/python3.12/site-packages (not just the
+# application's /opt/venv). Upgrade these in the runtime stage as well as the
+# builder stage so vulnerable base-image copies cannot remain in the image.
+RUN python -m pip install --no-cache-dir --upgrade \
+      "pip" \
+      "setuptools==78.1.1" \
+      "jaraco.context>=6.1.0" \
+      "wheel>=0.46.2" \
+    && python -c "import setuptools, jaraco.context, wheel; assert setuptools.__version__ == '78.1.1', setuptools.__version__; assert tuple(map(int, jaraco.context.__version__.split('.'))) >= (6, 1, 0), jaraco.context.__version__; assert tuple(map(int, wheel.__version__.split('.'))) >= (0, 46, 2), wheel.__version__"
 RUN groupadd --system app && useradd --system --gid app --no-create-home app
 WORKDIR /app
 ENV PATH="/opt/venv/bin:$PATH" \
