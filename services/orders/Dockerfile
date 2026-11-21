@@ -33,7 +33,7 @@ RUN python -m pip install --no-cache-dir --upgrade \
       "setuptools==78.1.1" \
       "jaraco.context>=6.1.0" \
       "wheel>=0.46.2" \
-    && python -c "import setuptools, jaraco.context, wheel; assert setuptools.__version__ == '78.1.1', setuptools.__version__; assert tuple(map(int, jaraco.context.__version__.split('.'))) >= (6, 1, 0), jaraco.context.__version__; assert tuple(map(int, wheel.__version__.split('.'))) >= (0, 46, 2), wheel.__version__"
+    && python -c "from importlib.metadata import version; assert version('setuptools') == '78.1.1', version('setuptools'); assert tuple(map(int, version('jaraco.context').split('.'))) >= (6, 1, 0), version('jaraco.context'); assert tuple(map(int, version('wheel').split('.'))) >= (0, 46, 2), version('wheel')"
 RUN groupadd --system app && useradd --system --gid app --no-create-home app
 WORKDIR /app
 ENV PATH="/opt/venv/bin:$PATH" \
