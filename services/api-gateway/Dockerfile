@@ -1,11 +1,11 @@
 # syntax=docker/dockerfile:1
 
 # ---- Stage 1: build ----
-FROM --platform=linux/amd64 node:20 AS build
+FROM --platform=linux/amd64 node:22-alpine AS build
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
-RUN npm ci
+RUN npm install --no-audit --no-fund
 
 COPY tsconfig.json ./
 COPY src ./src
@@ -15,7 +15,7 @@ RUN npm run build
 RUN npm prune --omit=dev
 
 # ---- Stage 2: runtime ----
-FROM --platform=linux/amd64 node:20-slim AS runtime
+FROM --platform=linux/amd64 node:22-alpine-slim AS runtime
 # Pull in all available Debian security updates so the runtime image does not
 # ship fixable OS-package CVEs (the Trivy image gate in ci.yml/pr-checks
 # blocks on HIGH/CRITICAL). Anything left after this is genuinely unfixable
@@ -26,7 +26,7 @@ RUN apt-get update \
     && apt-get -y --purge autoremove \
     && rm -rf /var/lib/apt/lists/*
 # The runtime only runs `node dist/index.js` — it never invokes the npm CLI.
-# node:20-slim bundles the npm CLI (/usr/local/lib/node_modules/npm), which
+# node:22-alpine-slim bundles the npm CLI (/usr/local/lib/node_modules/npm), which
 # drags in a large tree of npm-internal deps (tar, minimatch, glob,
 # cross-spawn, sigstore, ...) that carry their own CVEs and are impossible to
 # patch independently of the base image. Removing it shrinks the runtime
