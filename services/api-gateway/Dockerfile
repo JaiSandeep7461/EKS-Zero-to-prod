@@ -15,7 +15,7 @@ RUN npm run build
 RUN npm prune --omit=dev
 
 # ---- Stage 2: runtime ----
-FROM --platform=linux/amd64 node:22-alpine-slim AS runtime
+FROM --platform=linux/amd64 node:22-alpine AS runtime
 # Pull in all available Debian security updates so the runtime image does not
 # ship fixable OS-package CVEs (the Trivy image gate in ci.yml/pr-checks
 # blocks on HIGH/CRITICAL). Anything left after this is genuinely unfixable
