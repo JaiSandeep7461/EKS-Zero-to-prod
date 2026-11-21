@@ -1,7 +1,6 @@
 # syntax=docker/dockerfile:1
 
-# Build and runtime use the same clean Python base and venv. This avoids
-# carrying any vulnerable setuptools copy from a second/global Python install.
+# Build dependencies and setuptools are intentionally confined to this stage.
 FROM --platform=linux/amd64 python:3.12-slim AS build
 WORKDIR /src
 RUN python -m venv /opt/venv
@@ -13,12 +12,21 @@ RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir --no-build-isolation . \
     && python -c "from importlib.metadata import version; assert version('setuptools') == '84.2.1', version('setuptools')"
 
-# Runtime inherits from the patched build stage rather than starting from a
-# fresh python:3.12-slim image with an independent global Python installation.
-FROM build AS runtime
+# Start runtime from a fresh base image. Copy only the app environment, then
+# remove build-only packaging tools from the copied venv. The app itself does
+# not need setuptools, pip, or wheel at runtime.
+FROM --platform=linux/amd64 python:3.12-slim AS runtime
+RUN apt-get update \
+    && apt-get -y upgrade \
+    && rm -rf /var/lib/apt/lists/*
 RUN groupadd --system app && useradd --system --gid app --no-create-home app
 WORKDIR /app
-ENV PYTHONUNBUFFERED=1
+ENV PATH="/opt/venv/bin:$PATH" \
+    PYTHONUNBUFFERED=1
+COPY --from=build /opt/venv /opt/venv
+RUN /opt/venv/bin/python -m pip uninstall -y setuptools wheel pip \
+    && rm -rf /opt/venv/lib/python3.12/site-packages/pkg_resources* \
+    && /opt/venv/bin/python -c "import importlib.util; assert importlib.util.find_spec('setuptools') is None; assert importlib.util.find_spec('pip') is None"
 COPY app ./app
 
 USER app
