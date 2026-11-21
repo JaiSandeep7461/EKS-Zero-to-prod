@@ -1,0 +1,81 @@
+name: dev-deployment-smoke-test
+
+on:
+  workflow_run:
+    workflows: ["ci"]
+    types: [completed]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  smoke-test:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - name: Configure AWS credentials (OIDC, no static keys)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - uses: azure/setup-kubectl@v4
+        with:
+          version: latest
+
+      - name: Resolve deployment commit
+        id: revision
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            echo "sha=${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "sha=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Configure kubeconfig
+        env:
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME }}
+        run: |
+          aws eks update-kubeconfig             --name "${EKS_CLUSTER_NAME}"             --region "${AWS_REGION}"
+
+      - name: Verify dev workloads roll out
+        run: |
+          set -euo pipefail
+          expected="catalog orders api-gateway frontend"
+          for svc in $expected; do
+            deployment="ztd-capstone-${svc}"
+            echo "Waiting for ${deployment}..."
+            kubectl -n dev rollout status "deployment/${deployment}" --timeout=10m
+          done
+
+      - name: Verify pods are Ready
+        run: |
+          set -euo pipefail
+          kubectl -n dev get pods -o wide
+          kubectl -n dev wait             --for=condition=Ready             --timeout=5m             pod             -l 'app.kubernetes.io/instance=ztd-capstone'
+
+      - name: Smoke-test frontend and API gateway
+        run: |
+          set -euo pipefail
+
+          kubectl -n dev port-forward svc/frontend 18080:80 >/tmp/frontend-port-forward.log 2>&1 &
+          frontend_pf=$!
+          kubectl -n dev port-forward svc/api-gateway 18081:80 >/tmp/api-port-forward.log 2>&1 &
+          api_pf=$!
+          trap 'kill $frontend_pf $api_pf 2>/dev/null || true' EXIT
+
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:18080/healthz >/tmp/frontend-health.json; then break; fi
+            sleep 2
+          done
+          curl -fsS http://127.0.0.1:18080/healthz
+          curl -fsS http://127.0.0.1:18081/healthz
+
+      - name: Print deployment evidence
+        run: |
+          kubectl -n dev get deploy,svc,pods
+          kubectl -n dev get events --sort-by=.lastTimestamp | tail -50
